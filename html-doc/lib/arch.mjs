@@ -27,15 +27,22 @@ const KIND_STROKE = {
   success: COL.olive, warn: COL.clay,
 };
 
-const NODE_H = 46;
+const BASE_NODE_H = 46;
+const LINE_H = 16;       // per text line inside a node
 const GAP_X = 46;
 const GAP_Y = 40;
 const PAD = 12;
 
 let archSeq = 0; // unique marker ids when several arch blocks share a page
 
+// A label may contain newlines (real `\n` from JSON); render each as its own line.
+function labelLines(label) {
+  return String(label ?? '').split(/\r?\n/);
+}
+
 function nodeWidth(label) {
-  return Math.min(240, Math.max(110, String(label || '').length * 7.4 + 28));
+  const longest = labelLines(label).reduce((m, l) => Math.max(m, l.length), 0);
+  return Math.min(240, Math.max(110, longest * 7.4 + 28));
 }
 
 function autoLayer(nodes, edges) {
@@ -90,6 +97,11 @@ export function renderArch(block) {
     ({ rowOf, colOf } = autoLayer(nodes, edges));
   }
 
+  // Uniform node height sized to the tallest (multi-line) label, so the grid
+  // math stays simple and boxes line up.
+  const maxLines = Math.max(1, ...nodes.map((n) => labelLines(n.label).length));
+  const NODE_H = Math.max(BASE_NODE_H, maxLines * LINE_H + 18);
+
   // per-column max width to lay out x without overlap
   const widths = new Map(nodes.map((n) => [n.id, nodeWidth(n.label)]));
   const colMaxW = new Map();
@@ -138,9 +150,11 @@ export function renderArch(block) {
       path = `M${ax},${a.cy} L${mx},${a.cy} L${mx},${b.cy} L${bx},${b.cy}`;
       lx = mx; ly = (a.cy + b.cy) / 2;
     }
-    const label = e.label
-      ? `<rect x="${lx - e.label.length * 3.4 - 4}" y="${ly - 9}" width="${e.label.length * 6.8 + 8}" height="18" rx="4" fill="${COL.ivory}" stroke="${COL.gray300}"/>` +
-        `<text x="${lx}" y="${ly + 3}" text-anchor="middle" font-size="11" fill="${COL.gray700}">${escapeHtml(e.label)}</text>`
+    // Edge labels stay single-line; collapse any newlines so the pill sizes right.
+    const el = e.label != null ? String(e.label).replace(/\s*\r?\n\s*/g, ' ') : '';
+    const label = el
+      ? `<rect x="${lx - el.length * 3.4 - 4}" y="${ly - 9}" width="${el.length * 6.8 + 8}" height="18" rx="4" fill="${COL.gray150}" stroke="${COL.gray300}"/>` +
+        `<text x="${lx}" y="${ly + 3}" text-anchor="middle" font-size="11" fill="${COL.gray700}">${escapeHtml(el)}</text>`
       : '';
     return `<path d="${path}" fill="none" stroke="${COL.gray500}" stroke-width="1.5" marker-end="url(#${mid})"/>${label}`;
   }).join('');
@@ -150,9 +164,15 @@ export function renderArch(block) {
     const g = geo.get(n.id);
     const fill = KIND_FILL[n.k] || COL.white;
     const stroke = KIND_STROKE[n.k] || COL.gray300;
+    // Center the block of lines vertically around the node's mid-line.
+    const lines = labelLines(n.label);
+    const startY = g.cy + 4 - ((lines.length - 1) * LINE_H) / 2;
+    const tspans = lines.map((ln, i) =>
+      `<tspan x="${g.cx.toFixed(1)}" y="${(startY + i * LINE_H).toFixed(1)}">${escapeHtml(ln)}</tspan>`
+    ).join('');
     return `<g>` +
       `<rect x="${g.x}" y="${g.y}" width="${g.w}" height="${g.h}" rx="8" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>` +
-      `<text x="${g.cx}" y="${g.cy + 4}" text-anchor="middle" font-size="13" font-weight="500" fill="${COL.slate}" font-family="system-ui, sans-serif">${escapeHtml(n.label)}</text>` +
+      `<text text-anchor="middle" font-size="13" font-weight="500" fill="${COL.slate}" font-family="system-ui, sans-serif">${tspans}</text>` +
       `</g>`;
   }).join('');
 
