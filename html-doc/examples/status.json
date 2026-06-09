@@ -1,0 +1,32 @@
+{
+  "title": "Weekly Status — Ingest Platform",
+  "subtitle": "Week of May 26",
+  "meta": { "Team": "platform", "On-call": "sam" },
+  "blocks": [
+    { "t": "toc" },
+
+    { "t": "h", "l": 2, "x": "Metrics" },
+    { "t": "stat", "items": [
+      { "label": "p50 latency", "value": "42ms", "delta": "▼ 18%", "k": "success" },
+      { "label": "error rate", "value": "0.31%", "delta": "▲ 0.1%", "k": "warn" },
+      { "label": "events/day", "value": "1.2B", "delta": "▲ 6%" },
+      { "label": "cost / 1M", "value": "$0.04", "delta": "▼ 12%", "k": "success" }
+    ]},
+
+    { "t": "h", "l": 2, "x": "Highlights" },
+    { "t": "columns", "cols": [
+      { "title": "Shipped", "blocks": [
+        { "t": "ul", "items": ["Write-through session cache", "Backpressure on the event bus", "`/healthz` now checks the loader"] }
+      ]},
+      { "title": "In flight", "blocks": [
+        { "t": "ul", "items": ["Redis cache impl (behind flag)", "Warehouse loader retries", "Dashboards for **p99**"] }
+      ]}
+    ]},
+
+    { "t": "h", "l": 2, "x": "Risks" },
+    { "t": "callout", "k": "warn", "title": "Loader lag", "x": "Warehouse loader fell behind by ~4 min during the Tuesday spike. Tracking in `PLAT-812`." },
+
+    { "t": "h", "l": 2, "x": "Next week" },
+    { "t": "ul", "items": ["Ramp Redis cache to 50%", "Add per-key stampede lock", "Close out `PLAT-812`"] }
+  ]
+}

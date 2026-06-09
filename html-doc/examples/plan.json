@@ -1,0 +1,41 @@
+{
+  "title": "Implementation Plan — Session Caching",
+  "subtitle": "Move session lookups off the hot path",
+  "meta": { "Owner": "platform", "Target": "Q3", "Effort": "~5 days" },
+  "blocks": [
+    { "t": "p", "x": "We resolve the session on *every* request by hitting Postgres. This adds ~12ms p50. Plan: introduce a write-through cache in front of `SessionStore`." },
+
+    { "t": "h", "l": 2, "x": "Steps" },
+    { "t": "steps", "items": [
+      { "title": "Add cache interface", "x": "Define `SessionCache` with `get/set/del`; in-memory impl first.", "status": "done" },
+      { "title": "Wire write-through in SessionStore", "x": "Populate on read-miss, invalidate on logout.", "status": "in progress" },
+      { "title": "Swap in Redis impl", "x": "Behind `SESSION_CACHE=redis` flag.", "status": "todo" },
+      { "title": "Load test + rollout", "x": "Shadow read for a day, then ramp.", "status": "todo" }
+    ]},
+
+    { "t": "h", "l": 2, "x": "Request path" },
+    { "t": "arch", "title": "Where the cache sits", "nodes": [
+      { "id": "br", "label": "Browser", "k": "client" },
+      { "id": "rt", "label": "/api/session", "k": "service" },
+      { "id": "mw", "label": "verifyToken()", "k": "service" },
+      { "id": "cache", "label": "SessionCache", "k": "primary" },
+      { "id": "store", "label": "SessionStore", "k": "service" },
+      { "id": "pg", "label": "Postgres", "k": "db" }
+    ], "edges": [
+      { "from": "br", "to": "rt" },
+      { "from": "rt", "to": "mw" },
+      { "from": "mw", "to": "cache" },
+      { "from": "cache", "to": "store", "label": "miss" },
+      { "from": "store", "to": "pg" }
+    ]},
+
+    { "t": "callout", "k": "info", "title": "Invalidation", "x": "The tricky part is logout — delete the cache key in the same transaction that revokes the session row, or you'll serve stale auth." },
+
+    { "t": "h", "l": 2, "x": "Risks" },
+    { "t": "ul", "items": [
+      "Stale sessions after logout if invalidation lags — mitigated by short TTL (60s).",
+      "Redis outage — fall back to direct `SessionStore` reads, never fail closed.",
+      "Cache stampede on cold start — use a per-key lock."
+    ]}
+  ]
+}

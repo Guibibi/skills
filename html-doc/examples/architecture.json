@@ -1,0 +1,24 @@
+{
+  "title": "Architecture Overview — Ingest Pipeline",
+  "subtitle": "How events flow from edge to warehouse",
+  "blocks": [
+    { "t": "p", "x": "Events are batched at the edge, validated, then fanned out to the live store and the warehouse loader." },
+    { "t": "arch", "title": "Service topology", "nodes": [
+      { "id": "edge", "label": "Edge Collector", "c": 0, "r": 0, "k": "client" },
+      { "id": "gw", "label": "Ingest Gateway", "c": 0, "r": 1, "k": "primary" },
+      { "id": "val", "label": "Validator", "c": 0, "r": 2, "k": "service" },
+      { "id": "bus", "label": "Event Bus", "c": 0, "r": 3, "k": "service" },
+      { "id": "live", "label": "Live Store", "c": -1, "r": 4, "k": "db" },
+      { "id": "load", "label": "WH Loader", "c": 1, "r": 4, "k": "service" },
+      { "id": "wh", "label": "Warehouse", "c": 1, "r": 5, "k": "db" }
+    ], "edges": [
+      { "from": "edge", "to": "gw", "label": "batch" },
+      { "from": "gw", "to": "val" },
+      { "from": "val", "to": "bus", "label": "ok" },
+      { "from": "bus", "to": "live" },
+      { "from": "bus", "to": "load" },
+      { "from": "load", "to": "wh" }
+    ]},
+    { "t": "callout", "k": "note", "title": "Backpressure", "x": "The bus buffers up to 5 min; if the loader falls behind, live writes are unaffected." }
+  ]
+}

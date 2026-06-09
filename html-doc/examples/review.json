@@ -1,0 +1,59 @@
+{
+  "title": "Code Review — PR #247",
+  "subtitle": "Add optimistic updates to the task list",
+  "meta": { "Author": "alex", "Branch": "feat/optimistic-tasks", "Changes": "+142 / −38", "Risk": "Medium" },
+  "blocks": [
+    { "t": "p", "x": "Overall this is a **solid change** — the optimistic flow in `useOptimisticTasks` is clean. Two things block merge and a couple of nits below." },
+    { "t": "callout", "k": "warn", "title": "Needs attention before merge", "x": "The query cancellation path can drop a pending mutation. See the blocking finding." },
+
+    { "t": "h", "l": 2, "x": "Findings" },
+    {
+      "t": "finding", "sev": "blocking", "title": "Race: mutation can be lost on rapid edits",
+      "file": "src/hooks/useOptimisticTasks.ts", "line": 42,
+      "x": "When two edits fire within the same tick, `qc.cancelQueries` cancels the first mutation's refetch but the rollback snapshot is overwritten. Capture the snapshot *before* calling cancel.",
+      "code": { "lang": "ts", "x": "const prev = qc.getQueryData(key);   // capture first\nawait qc.cancelQueries({ queryKey: key });\nqc.setQueryData(key, optimistic);" }
+    },
+    {
+      "t": "finding", "sev": "warn", "title": "Missing error toast on rollback",
+      "file": "src/hooks/useOptimisticTasks.ts", "line": 71,
+      "x": "Rollback restores state silently. Surface a toast so the user knows the change didn't persist."
+    },
+    {
+      "t": "finding", "sev": "nit", "title": "Prefer `const` over `let` for `key`",
+      "file": "src/hooks/useOptimisticTasks.ts", "line": 18,
+      "x": "`key` is never reassigned."
+    },
+
+    { "t": "h", "l": 2, "x": "Key diff" },
+    {
+      "t": "diff", "file": "src/hooks/useOptimisticTasks.ts",
+      "lines": [
+        "@@ -39,6 +39,8 @@ export function useOptimisticTasks() {",
+        " const key = ['tasks', listId];",
+        "-await qc.cancelQueries({ queryKey: key });",
+        "-const prev = qc.getQueryData(key);",
+        "+const prev = qc.getQueryData(key);",
+        "+await qc.cancelQueries({ queryKey: key });",
+        " qc.setQueryData(key, optimistic);"
+      ]
+    },
+
+    { "t": "h", "l": 2, "x": "Test coverage" },
+    {
+      "t": "table",
+      "cols": ["Area", "Covered", "Note"],
+      "rows": [
+        ["happy path", "✓", "good"],
+        ["concurrent edits", "✗", "add a test for the race above"],
+        ["rollback", "partial", "no assertion on toast"]
+      ]
+    },
+
+    { "t": "details", "summary": "Suggested test sketch", "blocks": [
+      { "t": "p", "x": "A minimal reproduction of the race:" },
+      { "t": "code", "lang": "ts", "x": "it('keeps the latest of two rapid edits', async () => {\n  fireEdit('A'); fireEdit('B');\n  await flush();\n  expect(store.get(id).title).toBe('B');\n});" }
+    ]},
+
+    { "t": "callout", "k": "success", "title": "Nice", "x": "The `[docs](#)` you added for the hook are clear and the naming is consistent." }
+  ]
+}
