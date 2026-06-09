@@ -48,6 +48,15 @@ function buildHtml(doc, titleOverride, ctx) {
 
   const body = renderBlocks(doc.blocks, ctx);
 
+  // Mermaid is loaded from a CDN, and only when a mermaid block is present, so
+  // documents without diagrams stay fully self-contained.
+  const mermaidScript = ctx.needsMermaid
+    ? `\n<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+</script>`
+    : '';
+
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -64,7 +73,7 @@ ${subtitle}
 ${metaStrip}
 </header>
 ${body}
-</main>
+</main>${mermaidScript}
 </body>
 </html>
 `;

@@ -26,6 +26,7 @@ fields (`path`, `lang`, `id`, etc.) are treated as plain text.
 - [toc — table of contents](#toc--table-of-contents)
 - [details — collapsible](#details--collapsible)
 - [arch — architecture diagram](#arch--architecture-diagram)
+- [mermaid — Mermaid diagram (CDN)](#mermaid--mermaid-diagram-cdn)
 
 ---
 
@@ -214,3 +215,26 @@ white box.
 Tips: keep labels short (they size the box; long labels are clamped to ~240px). For wide
 flows, lay nodes out by hand with `c`/`r`; for a quick chain, just list nodes and edges
 and let auto-layout handle it.
+
+## mermaid — Mermaid diagram (CDN)
+```json
+{
+  "t": "mermaid",
+  "title": "Auth sequence",
+  "code": "sequenceDiagram\n  Client->>Hearth: POST /login\n  Hearth-->>Client: JWT"
+}
+```
+- `code` — the raw Mermaid source (any Mermaid diagram type: `graph`/`flowchart`,
+  `sequenceDiagram`, `classDiagram`, `stateDiagram`, `gantt`, `pie`, `erDiagram`, …).
+  Newlines are significant — use real `\n` in the JSON string.
+- `title?` — optional caption shown under the diagram.
+
+**Not self-contained.** Unlike every other block, this loads Mermaid from
+`cdn.jsdelivr.net` at view time, so the document needs internet to draw the diagram (and
+won't render it offline, over `file://` with no network, or behind a CDN-blocking proxy).
+The loader script is injected **only** when at least one `mermaid` block is present, so
+diagram-free documents stay fully offline-capable. If the script can't load, the raw
+Mermaid source shows as a readable `<pre>` fallback.
+
+**Prefer `arch`** for simple boxes-and-arrows (it's inline SVG and stays offline); reach
+for `mermaid` only when you need a diagram type `arch` doesn't provide.

@@ -71,10 +71,16 @@ components for simple emphasis — it saves tokens.
 | `columns` | `cols: [{title?, blocks: []}]` | side-by-side panels (nests blocks) |
 | `toc` | `title?` | auto table of contents (links to every `h`) |
 | `details` | `summary`, `blocks: []` | collapsible section (nests blocks) |
-| `arch` | `title?`, `nodes: [{id,label,c?,r?,k?}]`, `edges: [{from,to,label?}]` | architecture / flow diagram (SVG) |
+| `arch` | `title?`, `nodes: [{id,label,c?,r?,k?}]`, `edges: [{from,to,label?}]` | architecture / flow diagram (SVG, self-contained) |
+| `mermaid` | `code`, `title?` | Mermaid diagram (`code` is Mermaid syntax). **Loads Mermaid from a CDN at view time — not self-contained / needs internet.** |
 
 Headings (`h`) automatically get clickable anchor ids; a `toc` block placed anywhere
 links to all of them in document order.
+
+**`arch` vs `mermaid`:** prefer `arch` for boxes-and-arrows — it renders inline SVG and
+keeps the document fully offline. Use `mermaid` when you need a diagram type `arch` can't
+do (sequence, gantt, class, state, pie, etc.) and accept that those docs require internet
+to draw the diagram. Mermaid is only loaded when at least one `mermaid` block is present.
 
 For the **full** field reference, examples per block, and `arch` layout details, read
 `references/components.md` — you only need it for `diff`, `finding`, and `arch`; the rest

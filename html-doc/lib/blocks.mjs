@@ -172,6 +172,18 @@ const renderers = {
   },
 
   arch(b) { return renderArch(b); },
+
+  mermaid(b, ctx) {
+    // Diagram rendered client-side by Mermaid loaded from a CDN. Signals the
+    // generator to inject the loader script (only when a mermaid block exists).
+    // NOTE: unlike every other block, the output is NOT self-contained — it
+    // needs internet at view time to fetch Mermaid and draw the diagram.
+    if (ctx) ctx.needsMermaid = true;
+    const caption = b.title ? `<div class="mermaid-caption">${inline(b.title)}</div>` : '';
+    // Escaped source; Mermaid reads textContent, so entities decode back to the
+    // real diagram syntax. The <pre> is a readable fallback if JS is blocked.
+    return `<figure class="mermaid-figure"><pre class="mermaid">${escapeHtml(b.code || b.x || '')}</pre>${caption}</figure>`;
+  },
 };
 
 function statusKind(status) {

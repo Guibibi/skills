@@ -1,7 +1,9 @@
 // Self-contained CSS for the generated document.
 // Design tokens ported from the Anthropic "html-effectiveness" reference pages:
 // clean reading document, ivory/slate/clay palette, serif headings, system fonts
-// (no web fonts, no CDN — the output works fully offline / over file://).
+// (no web fonts, no CDN for the core document — output works offline / over
+// file://; the optional `mermaid` block is the lone exception and loads from a
+// CDN at view time).
 
 export const styles = `
 :root {
@@ -380,6 +382,17 @@ details .d-body > :last-child { margin-bottom: 0; }
 .arch { margin: 0 0 22px; }
 .arch .arch-title { font-weight: 600; color: var(--slate); margin-bottom: 8px; }
 .arch svg { max-width: 100%; height: auto; display: block; }
+
+/* ——— mermaid diagrams (rendered client-side, content swapped to SVG) ——— */
+.mermaid-figure { margin: 0 0 18px; }
+pre.mermaid {
+  background: none; border: none; padding: 0; margin: 0;
+  text-align: center; line-height: normal;
+}
+.mermaid-caption {
+  margin-top: 8px; text-align: center;
+  font-size: 13px; color: var(--gray-500);
+}
 
 /* ——— fallback for unknown block types ——— */
 .unknown-block {
