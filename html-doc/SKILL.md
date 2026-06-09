@@ -1,6 +1,7 @@
 ---
 name: html-doc
-description: Turn a review, plan, report, analysis, architecture overview, or any structured message into a clean, self-contained HTML document for easier reading and sharing. You write a compact component-JSON (not HTML), and a bundled Node generator renders it. Use this whenever the user wants an HTML version, a "nice writeup", a shareable/readable report, or a visual rendering of a code review, implementation plan, status update, post-mortem, or architecture diagram — even if they don't say the word "HTML". Prefer this over hand-writing HTML/CSS: it is far cheaper in tokens and looks consistent.
+description: >-
+  Turn a review, plan, report, analysis, architecture overview, or any structured message into a clean, self-contained HTML document for easier reading and sharing. You write a compact component-JSON (not HTML), and a bundled Node generator renders it. Use this whenever the user wants an HTML version, a "nice writeup", a shareable/readable report, or a visual rendering of a code review, implementation plan, status update, post-mortem, or architecture diagram — even if they don't say the word "HTML". Prefer this over hand-writing HTML/CSS: it is far cheaper in tokens and looks consistent.
 ---
 
 # html-doc
